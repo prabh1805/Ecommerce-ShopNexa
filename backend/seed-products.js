@@ -2,7 +2,7 @@
 const db = db.getSiblingDB("ecommerce");
 
 // Delete all old seeded products for this seller
-const seller = db.users.findOne({ email: "prabhatjha1511@gmail.com" });
+const seller = db.users.findOne({ email: "seller@example.com" });
 if (!seller) { print("❌ Seller not found"); quit(1); }
 const deleted = db.products.deleteMany({ sellerId: seller.email });
 print("🗑️  Deleted " + deleted.deletedCount + " old products");
