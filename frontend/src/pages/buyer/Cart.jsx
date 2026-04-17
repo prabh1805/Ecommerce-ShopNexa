@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../services/api";
 import Toast from "../../components/Toast";
 
 export default function Cart() {
@@ -22,12 +22,8 @@ export default function Cart() {
   const fetchCart = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:8080/api/cart/${user.id}`);
+      const response = await api.get("/api/cart");
       console.log("🛒 Cart data:", response.data);
-      console.log("🛒 Cart items:", response.data.items);
-      if (response.data.items && response.data.items.length > 0) {
-        console.log("🛒 First item structure:", response.data.items[0]);
-      }
       setCart(response.data);
     } catch (error) {
       console.error("❌ Error fetching cart:", error);
@@ -40,8 +36,8 @@ export default function Cart() {
   const updateQuantity = async (productId, newQuantity) => {
     if (newQuantity < 1) return;
     try {
-      const response = await axios.put("http://localhost:8080/api/cart/update", null, {
-        params: { userId: user.id, productId, quantity: newQuantity }
+      const response = await api.put("/api/cart/update", null, {
+        params: { productId, quantity: newQuantity }
       });
       setCart(response.data);
       setToast({ message: "Quantity updated", type: "success" });
@@ -53,8 +49,8 @@ export default function Cart() {
 
   const removeItem = async (productId) => {
     try {
-      const response = await axios.delete("http://localhost:8080/api/cart/remove", {
-        params: { userId: user.id, productId }
+      const response = await api.delete("/api/cart/remove", {
+        params: { productId }
       });
       setCart(response.data);
       setToast({ message: "Item removed from cart", type: "success" });
@@ -70,7 +66,7 @@ export default function Cart() {
 
   const confirmClearCart = async () => {
     try {
-      await axios.delete(`http://localhost:8080/api/cart/clear/${user.id}`);
+      await api.delete("/api/cart/clear");
       setCart({ items: [] });
       setToast({ message: "Cart cleared successfully", type: "success" });
       setShowConfirm(false);
@@ -84,11 +80,13 @@ export default function Cart() {
   const calculateTotal = () => {
     if (!cart || !cart.items) return 0;
     return cart.items.reduce((sum, item) => {
-      const product = item.product || item;
-      const price = product.price || 0;
-      const quantity = item.quantity || 1;
-      return sum + (price * quantity);
+      return sum + ((item.price || 0) * (item.quantity || 1));
     }, 0);
+  };
+
+  const totalItemCount = () => {
+    if (!cart || !cart.items) return 0;
+    return cart.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
   };
 
   if (!user) {
@@ -177,9 +175,7 @@ export default function Cart() {
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {cart.items.map((item) => {
-                // Handle both item.product and direct item structure
-                const product = item.product || item;
-                const productId = product.id || item.productId;
+                const productId = item.productId;
                 const quantity = item.quantity || 1;
                 
                 return (
@@ -188,8 +184,8 @@ export default function Cart() {
                       {/* Product Image */}
                       <div className="w-full sm:w-32 h-32 flex-shrink-0">
                         <img
-                          src={product.imageUrl || "https://via.placeholder.com/150"}
-                          alt={product.name || "Product"}
+                          src={item.imageUrl || "https://via.placeholder.com/150"}
+                          alt={item.name || "Product"}
                           className="w-full h-full object-cover rounded-xl"
                         />
                       </div>
@@ -198,8 +194,7 @@ export default function Cart() {
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <h3 className="text-lg font-bold text-gray-900">{product.name || "Unknown Product"}</h3>
-                            <p className="text-sm text-gray-600 mt-1">{product.category || "Uncategorized"}</p>
+                            <h3 className="text-lg font-bold text-gray-900">{item.name || "Unknown Product"}</h3>
                           </div>
                           <button
                             onClick={() => removeItem(productId)}
@@ -211,7 +206,7 @@ export default function Cart() {
                           </button>
                         </div>
 
-                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description || "No description available"}</p>
+                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{item.description || "No description available"}</p>
 
                         <div className="flex items-center justify-between">
                           {/* Quantity Controls */}
@@ -234,9 +229,9 @@ export default function Cart() {
 
                           {/* Price */}
                           <div className="text-right">
-                            <p className="text-sm text-gray-500">Price</p>
+                            <p className="text-sm text-gray-500">₹{item.price} × {quantity}</p>
                             <p className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                              ₹{((product.price || 0) * quantity).toFixed(2)}
+                              ₹{((item.price || 0) * quantity).toFixed(2)}
                             </p>
                           </div>
                         </div>
@@ -254,7 +249,7 @@ export default function Cart() {
 
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-gray-600">
-                    <span>Subtotal ({cart.items.length} items)</span>
+                    <span>Subtotal ({totalItemCount()} items)</span>
                     <span className="font-semibold">₹{calculateTotal().toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
@@ -271,7 +266,39 @@ export default function Cart() {
                   </div>
                 </div>
 
-                <button className="w-full px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 mb-3">
+                <button
+                  onClick={async () => {
+                    try {
+                      const { data } = await api.post("/api/orders/create");
+                      const options = {
+                        key: "rzp_test_SeXYBlKUUUINyd",
+                        amount: data.amount * 100,
+                        currency: data.currency,
+                        name: "ShopNexa",
+                        description: "Order Payment",
+                        order_id: data.razorpayOrderId,
+                        handler: function () {
+                          setToast({ message: "Payment successful! Order placed.", type: "success" });
+                          setCart({ items: [] });
+                        },
+                        prefill: {
+                          name: user.firstName + " " + user.lastName,
+                          email: user.email,
+                        },
+                        theme: { color: "#4f46e5" },
+                      };
+                      const rzp = new window.Razorpay(options);
+                      rzp.on("payment.failed", function () {
+                        setToast({ message: "Payment failed. Please try again.", type: "error" });
+                      });
+                      rzp.open();
+                    } catch (error) {
+                      console.error("❌ Checkout error:", error);
+                      setToast({ message: "Failed to initiate checkout", type: "error" });
+                    }
+                  }}
+                  className="w-full px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 mb-3"
+                >
                   Proceed to Checkout
                 </button>
 

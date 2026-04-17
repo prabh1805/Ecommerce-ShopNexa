@@ -20,7 +20,7 @@ export default function BuyerProducts() {
       const params = { page, size };
       if (category) params.category = category;
 
-      console.log("📡 Making API call to: http://localhost:8080/api/product");
+      console.log("📡 Making API call to: /api/product");
       console.log("📋 With params:", params);
 
       // Try /api/products first (plural)
@@ -69,7 +69,6 @@ export default function BuyerProducts() {
 
       await api.post("/api/cart/add", null, {
         params: {
-          userId: user.id,
           productId: product.id,
           quantity: 1,
         },

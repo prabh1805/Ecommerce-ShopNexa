@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "",
 });
 
 // ✅ Attach token ONLY for protected routes
@@ -12,7 +12,11 @@ api.interceptors.request.use((config) => {
     config.url.includes("/api/auth/login") ||
     config.url.includes("/api/auth/register");
 
-  if (token && !isAuthEndpoint) {
+  const isPublicEndpoint =
+    isAuthEndpoint ||
+    (config.method === "get" && config.url.match(/^\/api\/product(\?|$)/));
+
+  if (token && !isPublicEndpoint) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 

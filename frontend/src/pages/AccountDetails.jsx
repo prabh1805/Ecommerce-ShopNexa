@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../services/api";
 import Toast from "../components/Toast";
 
 export default function AccountDetails() {
@@ -52,8 +52,8 @@ export default function AccountDetails() {
     try {
       console.log("📤 Updating user with data:", form);
       
-      const response = await axios.put(
-        `http://localhost:8080/api/user/update/${user.id}`,
+      const response = await api.put(
+        `/api/user/update/${user.id}`,
         form
       );
 
