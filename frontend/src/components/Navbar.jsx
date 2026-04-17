@@ -1,16 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "../context/useAuth";
 
 export default function Navbar() {
-  const [user, setUser] = useState(null);
+  const { user, logout: authLogout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const u = JSON.parse(localStorage.getItem("user") || "null");
-    setUser(u);
-  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -25,8 +21,7 @@ export default function Navbar() {
   }, []);
 
   const logout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
+    authLogout();
     setDropdownOpen(false);
     navigate("/");
   };

@@ -35,7 +35,8 @@ export default function Register() {
       await login(data.token, data.user); // <-- this does the redirect/reload
       // nothing else needed here
       navigate(
-        data.user.role?.toLowerCase() === "seller" ? "/seller" : "/products"
+        data.user.roles?.toLowerCase() === "seller" ? "/seller" : "/products",
+        { replace: true }
       );
     } catch (error) {
       console.error(error);
