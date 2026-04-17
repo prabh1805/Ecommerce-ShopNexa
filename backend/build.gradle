@@ -10,7 +10,7 @@ description = 'Spring boot project for ecommerce backend'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(25)
 	}
 }
 
@@ -41,15 +41,31 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
     //lombok
-    compileOnly 'org.projectlombok:lombok:1.18.30' // Use the latest stable version
-    annotationProcessor 'org.projectlombok:lombok:1.18.30' // Use the same version
+    compileOnly 'org.projectlombok:lombok:1.18.44'
+    annotationProcessor 'org.projectlombok:lombok:1.18.44'
 
     //Spring security crypto
-    // https://mvnrepository.com/artifact/org.springframework.security/spring-security-crypto
     implementation("org.springframework.security:spring-security-crypto:7.0.0")
 
     //Validation API
     implementation("org.springframework.boot:spring-boot-starter-validation")
+
+    // Razorpay
+    implementation 'com.razorpay:razorpay-java:1.4.8'
+
+    // Force OkHttp 3.x (required by Razorpay SDK)
+    implementation 'com.squareup.okhttp3:okhttp:3.14.9'
+
+    // Force patched versions
+    implementation 'org.apache.commons:commons-lang3:3.14.0'
+    implementation 'org.apache.commons:commons-text:1.11.0'
+
+    // Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
 }
 
 tasks.named('test') {
