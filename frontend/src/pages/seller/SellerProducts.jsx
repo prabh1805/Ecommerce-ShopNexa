@@ -90,49 +90,67 @@ export default function SellerProducts() {
           </select>
         </div>
         {/* grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[600px]">
-          {isLoading
-            ? Array.from({ length: size }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-[380px] bg-gray-200 animate-pulse rounded-xl"
-                />
-              ))
-            : products.map((p) => (
-                <div key={p.id}>
-                  <ProductCard
-                    product={p}
-                    showActions={true}
-                    onEdit={(product) => setEditingProduct(product)}
-                    onDelete={async (product) => {
-                      if (!confirm("Delete product?")) return;
-                      await api.delete(`api/product/${product.id}`);
-                      refresh();
-                    }}
-                  />
-                </div>
-              ))}
-        </div>
-        {/* pagination controls */}
-        <div className="flex items-center justify-center gap-4 mt-6">
-          <button
-            disabled={page === 0}
-            onClick={() => setPage(page - 1)}
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <span>
-            Page {page + 1} of {Math.max(1, totalPages)}
-          </span>
-          <button
-            disabled={page + 1 >= totalPages}
-            onClick={() => setPage(page + 1)}
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+        {!isLoading && products.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24">
+            <svg className="w-20 h-20 text-gray-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">No products available</h3>
+            <p className="text-gray-500 mb-6">Start selling by adding your first product</p>
+            <button
+              onClick={() => navigate("/seller/add-product")}
+              className="px-6 py-3 bg-yellow-500 text-black font-semibold rounded-lg hover:bg-yellow-400 transition"
+            >
+              + Add Product
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[600px]">
+              {isLoading
+                ? Array.from({ length: size }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-[380px] bg-gray-200 animate-pulse rounded-xl"
+                    />
+                  ))
+                : products.map((p) => (
+                    <div key={p.id}>
+                      <ProductCard
+                        product={p}
+                        showActions={true}
+                        onEdit={(product) => setEditingProduct(product)}
+                        onDelete={async (product) => {
+                          if (!confirm("Delete product?")) return;
+                          await api.delete(`api/product/${product.id}`);
+                          refresh();
+                        }}
+                      />
+                    </div>
+                  ))}
+            </div>
+            {/* pagination controls */}
+            <div className="flex items-center justify-center gap-4 mt-6">
+              <button
+                disabled={page === 0}
+                onClick={() => setPage(page - 1)}
+                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <span>
+                Page {page + 1} of {Math.max(1, totalPages)}
+              </span>
+              <button
+                disabled={page + 1 >= totalPages}
+                onClick={() => setPage(page + 1)}
+                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* update modal */}
